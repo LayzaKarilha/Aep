@@ -1,0 +1,181 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_USUARIOS 100
+#define TAM_NOME 50
+
+typedef struct {
+    int id;
+    char nome[TAM_NOME];
+    
+} Usuario;
+
+ void cifra(char *texto, int deslocamento){
+ 	int num=0;
+    while(texto[num] !='\0'){
+    	num++;
+	}
+              
+
+ for(int g =0; texto[g]!='\0';g++){
+         
+              texto[g]= texto[g] + num + deslocamento;
+              
+              }
+}
+
+  void decifra(char *texto, int deslocamento){
+      int num=0;
+       while(texto[num] !='\0'){
+    	num++;
+	}
+           for (int g=0; texto[g]!='\0';g++){
+            texto[g] =texto[g]- num -deslocamento;   
+               }
+       }
+
+void salvar_usuarios(Usuario usuarios[], int n) {
+    FILE *f = fopen("usuarios.txt", "w");
+    if (f == NULL) {
+        printf("Erro ao abrir o arquivo.\n");
+        return;
+    }
+    for (int i = 0; i < n; i++) {
+        char nomecifra[TAM_NOME];
+        strcpy(nomecifra,usuarios[i].nome);
+        cifra(nomecifra, 3);
+        fprintf(f, "%d;%s\n", usuarios[i].id, nomecifra);
+    }
+    fclose(f);
+}
+
+
+int carregar_usuarios(Usuario usuarios[]) {
+    FILE *f = fopen("usuarios.txt", "r");
+    int n = 0;
+    if (f == NULL) {
+        return n;
+    }
+
+    while (fscanf(f, "%d;%49[^\n]\n", &usuarios[n].id, usuarios[n].nome) == 2) {
+          decifra(usuarios[n].nome,3);
+        n++;
+    }
+    fclose(f);
+    return n;
+}
+
+
+void incluir_usuario(Usuario usuarios[], int *n) {
+    Usuario novo_usuario;
+    novo_usuario.id = *n + 1;  
+    printf("Digite o nome do novo usuario: ");
+    getchar();  
+    fgets(novo_usuario.nome, TAM_NOME, stdin);
+    novo_usuario.nome[strcspn(novo_usuario.nome, "\n")] = '\0';  
+    usuarios[*n] = novo_usuario;
+    (*n)++;
+    salvar_usuarios(usuarios, *n);
+    printf("Usuario %s incluido com sucesso.\n", novo_usuario.nome);
+}
+
+
+void alterar_usuario(Usuario usuarios[], int n) {
+    int id_alterar;
+    printf("Digite o ID(numero) do usuario a ser alterado: ");
+    scanf("%d", &id_alterar);
+
+    int encontrado = 0;
+    for (int i = 0; i < n; i++) {
+        if (usuarios[i].id == id_alterar) {
+            printf("Usuario encontrado: %s\n", usuarios[i].nome);
+            printf("Digite o novo nome: ");
+            getchar();  
+            fgets(usuarios[i].nome, TAM_NOME, stdin);
+            usuarios[i].nome[strcspn(usuarios[i].nome, "\n")] = '\0';  
+            salvar_usuarios(usuarios, n);
+            printf("Usuario alterado com sucesso.\n");
+            encontrado = 1;
+            break;
+        }
+    }
+    if (!encontrado) {
+        printf("Usuario nao encontrado.\n");
+    }
+}
+
+
+void excluir_usuario(Usuario usuarios[], int *n) {
+    int id_excluir;
+    printf("Digite o ID(numero) do usuario a ser excluido: ");
+    scanf("%d", &id_excluir);
+
+    int encontrado = 0;
+    for (int i = 0; i < *n; i++) {
+        if (usuarios[i].id == id_excluir) {
+            for (int j = i; j < *n - 1; j++) {
+                usuarios[j] = usuarios[j + 1];  
+            }
+            (*n)--;  
+            salvar_usuarios(usuarios, *n);
+            printf("Usuario excluido com sucesso.\n");
+            encontrado = 1;
+            break;
+        }
+    }
+    if (!encontrado) {
+        printf("Usuario nao encontrado.\n");
+    }
+}
+
+
+void listar_usuarios(Usuario usuarios[], int n) {
+    if (n == 0) {
+        printf("Nenhum usuario cadastrado.\n");
+        return;
+    }
+    printf("Lista de Usuarios:\n");
+    for (int i = 0; i < n; i++) {
+        printf("ID: %d, Nome: %s\n", usuarios[i].id, usuarios[i].nome);
+    }
+}
+
+int main() {
+    Usuario usuarios[MAX_USUARIOS];
+    int n = carregar_usuarios(usuarios);  
+    int opcao;
+
+    do {
+        printf("\nMenu:\n");
+        printf("1. Incluir usuario\n");
+        printf("2. Alterar usuario\n");
+        printf("3. Excluir usuario\n");
+        printf("4. Listar usuarios\n");
+        printf("5. Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+            case 1:
+                incluir_usuario(usuarios, &n);
+                break;
+            case 2:
+                alterar_usuario(usuarios, n);
+                break;
+            case 3:
+                excluir_usuario(usuarios, &n);
+                break;
+            case 4:
+                listar_usuarios(usuarios, n);
+                break;
+            case 5:
+                printf("Saindo...\n");
+                break;
+            default:
+                printf("Opcao invalida!\n");
+        }
+    } while (opcao != 5);
+
+    return 0;
+}
